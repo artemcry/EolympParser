@@ -9,7 +9,7 @@
 #include <QPushButton>
 #include <QClipboard>
 #include <QMessageBox>
-
+#include <QFileDialog>
 #include "parser.h"
 
 QT_BEGIN_NAMESPACE

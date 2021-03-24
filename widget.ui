@@ -202,14 +202,39 @@
   <widget class="QPushButton" name="downloadButton">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>310</y>
-     <width>61</width>
+     <x>510</x>
+     <y>360</y>
+     <width>91</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Download</string>
+    <string>Download All Files</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="threadBox">
+   <property name="geometry">
+    <rect>
+     <x>470</x>
+     <y>360</y>
+     <width>42</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>How many threads to download files</string>
+   </property>
+   <property name="statusTip">
+    <string/>
+   </property>
+   <property name="minimum">
+    <number>100</number>
+   </property>
+   <property name="maximum">
+    <number>1000</number>
+   </property>
+   <property name="singleStep">
+    <number>2</number>
    </property>
   </widget>
  </widget>

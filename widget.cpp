@@ -8,6 +8,7 @@ Widget::Widget(QWidget *parent)
     , ui(new Ui::Widget)
 {
     ui->setupUi(this);
+    setFixedSize(size());
     ui->solutionLine->setValidator(new QRegExpValidator(QRegExp("^[1-9]{1}\\d{,4}"), this));
     p= new Parser(this);
 
@@ -48,11 +49,11 @@ Widget::Widget(QWidget *parent)
 
     // test
     connect(ui->downloadButton, &QPushButton::clicked , this,[this]() {
-        std::thread t(&Parser::downloadFiles,p,base,"C:/Users/Artem/Desktop/test",ui->solutionLine->text().toInt());
+        QString path = QFileDialog::getExistingDirectory(this, ("Select Output Folder"), QDir::currentPath()+"/Downloads");
+        std::thread t(&Parser::downloadFiles, p, base, path, ui->threadBox->value());
         t.detach();
     });
 }
-
 Widget::~Widget()
 {
     QFile f(QDir::currentPath()+"/base.json");
