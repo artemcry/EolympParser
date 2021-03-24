@@ -42,9 +42,8 @@ Widget::Widget(QWidget *parent)
 
 
     // test
-    connect(p,&Parser::downloadFilesFinished,this,[this](int files, QStringList s) {
+    connect(p,&Parser::downloadFilesFinished,this,[this](int, QStringList) {
        QMetaObject::invokeMethod(ui->downloadProgress,"setText",Qt::QueuedConnection,Q_ARG(QString,""));
-       cmd << ">>" << files<< "\n" <<s;
     });
 
     // test
@@ -152,7 +151,6 @@ void Widget::showSolution(const QString &name)
     if((QStringList() << "cpp" << "c" << "cs" << "py" << "rb" << "pas" << "java" << "js" << "").contains(s,Qt::CaseInsensitive))
     {
         QFile f(sol->path);
-        cmd << sol->path;
         f.open(QFile::ReadOnly);
         ui->textBox->setText(f.readAll());
 
