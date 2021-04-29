@@ -17,9 +17,6 @@ public:
     ~SaveSolution();
     Ui::SaveSolution *ui;
     QString Key() { return  ui->line->text(); };
-
-    QString codeLang() { return  ui->langBox->currentText(); }
-    void setLangs(const QStringList& l ) { ui->langBox->addItems(l); }
 };
 
 #endif // SAVESOLUTION_H

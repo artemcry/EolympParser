@@ -3,7 +3,6 @@
 #include <QDebug>
 #define cmd qDebug()
 #define tmp_files_path QDir::currentPath()+"/tmp"
-const QString Widget::Solution::custom = "Custom";
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -53,14 +52,11 @@ Widget::Widget(QWidget *parent)
         customBase[currentKey] = arr;
     });
 
-
-
-    // test
     connect(p,&Parser::downloadFilesFinished,this,[this](int, QStringList) {
         QMetaObject::invokeMethod(ui->downloadProgress,"setText",Qt::QueuedConnection,Q_ARG(QString,""));
     });
 
-    // test
+
     connect(ui->downloadButton, &QPushButton::clicked , this,[this]() {
         QString path = QFileDialog::getExistingDirectory(this, ("Select Output Folder"), QDir::currentPath()+"/Downloads");
         std::thread t(&Parser::downloadFiles, p, base, path, ui->threadBox->value());
@@ -89,7 +85,7 @@ bool Widget::selectSolution(QString index)
     for(auto e : solutions.value(index))
     {
         QListWidgetItem *i = new QListWidgetItem();
-        if(e->name == "Custom")
+        if(e->isCustom())
             i->setBackground(QColor(255,200,0,50));
         else
             i->setBackground(QColor(0,255,0,50));
@@ -124,7 +120,7 @@ void Widget::find()
         item->setBackground(QColor(255,0,0,50));
         item->setText("Loading...");
         ui->listWidget->addItem(item);
-        solutions[key].append(new Solution("","","",""));
+        solutions[key].append(new Solution());
 
 
         QString ref = e.toString();
@@ -163,34 +159,22 @@ void Widget::find()
     for (int i = 0; i < customBase.value(key).toArray().size() ; i++) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setBackground(QColor(255,200,0,50));
-        item->setText("Custom");
-        ui->listWidget->addItem(item);
-        solutions[key].append(new Solution("Custom","","",""));
+        solutions[key].append(new Solution());
+        item->setText(solutions[key].last()->name);
+
+        ui->listWidget->addItem(item);        
     }
-}
-
-QString Widget::getSolutionName(const QString &key, int index)
-{
-    QString ref = base[key].toArray().at(index).toString();
-    return ref.mid(ref.lastIndexOf("/")+1);
-}
-
-QString Widget::getSolutionLanguage(const QString &key, int index)
-{
-    QString ref = base[key].toArray().at(index).toString();
-    return ref.mid(ref.lastIndexOf('.')+1);
 }
 
 void Widget::addCustomSolution()
 {
     SaveSolution *s = new SaveSolution(currentKey);
-    s->setLangs(codeLangs);
     s->exec();
     if(s->Key().isEmpty())
         return;
     Parser::appendJsonArray(customBase, s->Key(), QJsonArray() << ui->textBox->toPlainText());
 
-    solutions[s->Key()].append(new Solution("Custom","","",""));
+    solutions[s->Key()].append(new Solution());
     if(currentKey == s->Key())
         selectSolution(s->Key());
 }
@@ -217,33 +201,24 @@ void Widget::showSolution(int index)
     if(index == -1)
         return;
     Solution* sol = solutions[currentKey].at(index);
-    QString s = sol->type;
     ui->urlBox->setText(sol->ref);
     ui->pathBox->setText(sol->path);
     ui->urlBox->setCursorPosition(0);
     ui->pathBox->setCursorPosition(0);
 
-    if(sol->name == Solution::custom)
+    if(sol->isCustom())
     {
         QJsonArray arr = customBase[currentKey].toArray();
-        cmd << index - ui->listWidget->count() + arr.size();
-
         ui->textBox->setText(arr[index - ui->listWidget->count() + arr.size()].toString());
     }
-
-    else if(codeLangs.contains(s, Qt::CaseInsensitive))
+    else if(codeLangs.contains(sol->type, Qt::CaseInsensitive))
     {
         QFile f(sol->path);
         f.open(QFile::ReadOnly);
         ui->textBox->setText(f.readAll());
-
     }
     else if (QMessageBox::question(this, "", "Open "+sol->name+" in another program?",
                                    QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes)
         QDesktopServices::openUrl(QUrl(sol->path));
 
 }
-
-
-
-

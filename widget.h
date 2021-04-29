@@ -22,20 +22,20 @@ struct Solution;
 
 class Widget : public QWidget
 {
-    Q_OBJECT    
+    Q_OBJECT
 public:
     struct Solution
     {
-        static const QString custom;
-        QString name,path,ref,type;
-        Solution(const QString &name,const QString &path,const QString &ref,const QString &type)
-            :name(name),path(path),ref(ref),type(type) {};
+        QString name, path, ref, type;
+        Solution(const QString &name, const QString &path, const QString &ref, const QString &type)
+            :name(name), path(path), ref(ref), type(type) {};
+        Solution() :name("custom solution") {};
+        bool isCustom() { return name == "custom solution"; }
 
     };
-
     Widget(QWidget *parent = nullptr);
     ~Widget();
-    const QStringList codeLangs = QStringList() << "cpp" << "c" << "cs" << "py" << "rb" << "pas" << "java" << "js" << "txt";
+    const QStringList codeLangs = { "cpp", "c", "cs", "py", "rb", "pas", "java", "js", "txt"} ;
     QMap<QString,QList<Solution*>> solutions;
     QJsonObject base;
     QJsonObject customBase;
@@ -50,4 +50,4 @@ public:
     QString cppToPython(QString code);
     Ui::Widget *ui;
 };
-#endif // WIDGET_H
+#endif

@@ -31,7 +31,7 @@
   <widget class="QPushButton" name="saveButton">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>120</x>
      <y>30</y>
      <width>41</width>
      <height>21</height>
@@ -41,23 +41,10 @@
     <string>Save</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>10</y>
-     <width>51</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Language</string>
-   </property>
-  </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>20</x>
      <y>10</y>
      <width>61</width>
      <height>16</height>
@@ -70,20 +57,10 @@
   <widget class="QLineEdit" name="line">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>20</x>
      <y>30</y>
-     <width>51</width>
+     <width>71</width>
      <height>21</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="langBox">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>30</y>
-     <width>61</width>
-     <height>22</height>
     </rect>
    </property>
   </widget>
