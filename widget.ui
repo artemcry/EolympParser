@@ -240,6 +240,32 @@
     <number>2</number>
    </property>
   </widget>
+  <widget class="QPushButton" name="addCustomButton">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>360</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Add  Сustom</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="applyButton">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>360</y>
+     <width>80</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Apply Changes</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

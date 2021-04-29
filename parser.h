@@ -47,11 +47,10 @@ class Parser : public QObject
 {
     Q_OBJECT
     QString adjustFileName(QString name);
-    static void appendJsonArray(QJsonObject &toIt, const QString &key, const QJsonArray &arr);
     const int volumeCount_SiteAda = 103, volumeCount_GitHub = 9;
-    int parseProgress = 0;
-
-public:    
+    int parseProgress = 0;    
+public:
+    static void appendJsonArray(QJsonObject &toIt, const QString &key, const QJsonArray &arr);
     explicit Parser(QObject *parent = nullptr);
     QJsonObject parseLinks_SiteAda();
     QJsonObject  parseLinks_GitHub();

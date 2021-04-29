@@ -11,13 +11,16 @@ CONFIG += c++11
 SOURCES += \
     main.cpp \
     parser.cpp \
+    savesolution.cpp \
     widget.cpp
 
 HEADERS += \
     parser.h \
+    savesolution.h \
     widget.h
 
 FORMS += \
+    savesolution.ui \
     widget.ui
 
 # Default rules for deployment.

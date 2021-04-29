@@ -43,6 +43,7 @@ public:
     bool downloading = false;
     Parser *p;
     void find();
+    void getSolutionName(const QString &key, int index);
     void addCustomSolution();
     void downloadBase();
     void showSolution(int index);

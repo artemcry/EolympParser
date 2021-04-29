@@ -10,10 +10,16 @@ Parser::Parser(QObject *parent) : QObject(parent) { }
 
 void Parser::appendJsonArray(QJsonObject &obj,const QString &key, const QJsonArray &arr)
 {
-    QJsonArray o = arr;
+    QJsonArray o;
     if(obj.contains(key))
+    {
         for(auto e : obj.value(key).toArray())
             o << e;
+        for(auto e : arr)
+            o << e;
+    }
+    else
+        o = arr;
     obj[key] = o;
 }
 
