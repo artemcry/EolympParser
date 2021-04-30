@@ -53,7 +53,7 @@ public:
     QString currentKey;
     bool downloading = false;
     Parser *p;
-    void find();
+    void find(const QString &key);
     void addCustomSolution();
     void downloadBase();
     void showCurrentSolutionAt(int index);

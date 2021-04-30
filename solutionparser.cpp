@@ -21,7 +21,7 @@ SolutionParser::SolutionParser(QWidget *parent)
     if(fcustom.open(QFile::ReadOnly))
         customBase = QJsonObject(QJsonDocument::fromJson(QString(fcustom.readAll()).toUtf8()).object());
 
-    connect(ui->findButton,&QPushButton::clicked,this,&SolutionParser::find);
+    connect(ui->findButton,&QPushButton::clicked,this,[this](){  find(ui->solutionLine->text()); });
     connect(ui->listWidget,&QListWidget::currentRowChanged,this,&SolutionParser::showCurrentSolutionAt);
     connect(ui->addCustomButton,&QPushButton::clicked,this,&SolutionParser::addCustomSolution);
 
@@ -96,13 +96,10 @@ bool SolutionParser::selectSolution(QString key)
     return true;
 }
 
-void SolutionParser::find()
+void SolutionParser::find(const QString &key)
 {    
-    QString key = ui->solutionLine->text();
-    if(key == currentKey)
-        return;
 
-    if(!base.contains(key))
+    if(!base.contains(key) && !customBase.contains(key))
     {
         QMessageBox msgBox;
         msgBox.setText("Base not contains this solution");
@@ -110,10 +107,10 @@ void SolutionParser::find()
         msgBox.exec();
         return;
     }
-    else if (selectSolution(key))
-        return;
-
+    currentKey = key;
     QJsonArray sols = base.value(key).toArray();
+
+    if(!solutions.contains(key))
     for(auto e: sols) {
 
         solutions[key].append(new Solution(false, "Loading..."));
@@ -152,14 +149,12 @@ void SolutionParser::find()
         });
     }
 
-    for (int i = 0; i < customBase.value(key).toArray().size() ; i++) {
-        QListWidgetItem *item = new QListWidgetItem();
-        item->setBackground(QColor(255,200,0,50));
+    int size = customBase.value(key).toArray().size();
+    if(solutions[key].size()-size < sols.size())  // if there is custom but not yet added to the collection
+    for (int i = 0; i < size ; i++)
         solutions[key].append(new CustomSolution);
-        item->setText(solutions[key].last()->name);
 
-        ui->listWidget->addItem(item);        
-    }
+    selectSolution(key);
 }
 
 void SolutionParser::addCustomSolution()
@@ -171,8 +166,7 @@ void SolutionParser::addCustomSolution()
     Parser::appendJsonArray(customBase, s->Key(), QJsonArray() << ui->textBox->toPlainText());
 
     solutions[s->Key()].append(new CustomSolution());
-    if(currentKey == s->Key())
-        selectSolution(s->Key());
+    find(s->Key());
 }
 
 void SolutionParser::downloadBase()

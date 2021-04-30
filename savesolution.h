@@ -16,7 +16,7 @@ public:
     explicit SaveSolution(const QString &defaultKey, QWidget *parent = nullptr);
     ~SaveSolution();
     Ui::SaveSolution *ui;
-    QString Key() { return  ui->line->text(); };
+    QString Key() { return  ui->line->text().trimmed(); };
 };
 
 #endif // SAVESOLUTION_H
