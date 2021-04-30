@@ -197,7 +197,6 @@ void SolutionParser::showCurrentSolutionAt(int index)
     if(index == -1)
         return;
 
-
     Solution* sol = solutions[currentKey].at(index);
     cmd << sol->path();
     ui->urlBox->setText(sol->ref);
