@@ -3,7 +3,8 @@
 
 QString Parser::adjustFileName(QString name)
 {
-    return name.replace(QRegExp("["+QRegExp::escape("\\/:*?\"<>|" ) + "]"), QString("_"));;
+    name = name.replace(QRegExp("["+QRegExp::escape("\\/:*?\"<>|" ) + "]"), QString("_"));
+    return name.replace(QRegExp("(\\W"), QString("_"));
 }
 
 Parser::Parser(QObject *parent) : QObject(parent) { }
@@ -124,7 +125,7 @@ QJsonObject Parser::parseAllLinks()
     return sada;
 }
 
-void Parser::downloadFiles(const QJsonObject &base, const QString &folder,const int thread_count = 100)
+void Parser::downloadFiles(const QJsonObject &base, const QString &folder,const int thread_count)
 {
     int file_count = 0;
     for (auto e : base)

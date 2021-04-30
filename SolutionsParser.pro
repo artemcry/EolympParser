@@ -12,12 +12,12 @@ SOURCES += \
     main.cpp \
     parser.cpp \
     savesolution.cpp \
-    widget.cpp
+    solutionparser.cpp
 
 HEADERS += \
     parser.h \
     savesolution.h \
-    widget.h
+    solutionparser.h
 
 FORMS += \
     savesolution.ui \

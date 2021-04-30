@@ -1,17 +1,16 @@
-#include "widget.h"
+#include "solutionparser.h"
 #include "ui_widget.h"
 #include <QDebug>
 #define cmd qDebug()
-#define tmp_files_path QDir::currentPath()+"/tmp"
 
-Widget::Widget(QWidget *parent)
+SolutionParser::SolutionParser(QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::Widget)
+    , ui(new Ui::SolutionParser)
 {
     ui->setupUi(this);
     setFixedSize(size());
     ui->solutionLine->setValidator(new QRegExpValidator(QRegExp("^[1-9]{1}\\d{,4}"), this));
-    p= new Parser(this);
+    p = new Parser(this);
 
     QFile fbase(QDir::currentPath()+"/base.json"), fcustom(QDir::currentPath()+"/base_custom.json");
     if(fbase.open(QFile::ReadOnly))
@@ -22,9 +21,9 @@ Widget::Widget(QWidget *parent)
     if(fcustom.open(QFile::ReadOnly))
         customBase = QJsonObject(QJsonDocument::fromJson(QString(fcustom.readAll()).toUtf8()).object());
 
-    connect(ui->findButton,&QPushButton::clicked,this,&Widget::find);
-    connect(ui->listWidget,&QListWidget::currentRowChanged,this,&Widget::showSolution);
-    connect(ui->addCustomButton,&QPushButton::clicked,this,&Widget::addCustomSolution);
+    connect(ui->findButton,&QPushButton::clicked,this,&SolutionParser::find);
+    connect(ui->listWidget,&QListWidget::currentRowChanged,this,&SolutionParser::showCurrentSolutionAt);
+    connect(ui->addCustomButton,&QPushButton::clicked,this,&SolutionParser::addCustomSolution);
 
     connect(ui->removeButton, &QPushButton::clicked, this, [this]() {
         ui->textBox->setText(ui->textBox->toPlainText().replace(QRegExp("(//)[^\n]*\n"),"\n").remove(QRegExp("/\\*.*\\*/")));
@@ -35,10 +34,8 @@ Widget::Widget(QWidget *parent)
     connect(ui->copyUrl, &QPushButton::clicked, this, [this]() {
         QApplication::clipboard()->setText(ui->urlBox->text());
     });
-    connect(ui->copyPath, &QPushButton::clicked, this, [this]() {
-        QApplication::clipboard()->setText(ui->pathBox->text());
-    });
-    connect(ui->updateBaseButton, &QPushButton::clicked, this, &Widget::downloadBase);
+
+    connect(ui->updateBaseButton, &QPushButton::clicked, this, &SolutionParser::downloadBase);
 
     connect(p,&Parser::downloadFilesProgresChanged,this,[this](double val) {
         QMetaObject::invokeMethod(ui->downloadProgress,"setText",Qt::QueuedConnection,Q_ARG(QString,QString::number(val)));
@@ -59,11 +56,12 @@ Widget::Widget(QWidget *parent)
 
     connect(ui->downloadButton, &QPushButton::clicked , this,[this]() {
         QString path = QFileDialog::getExistingDirectory(this, ("Select Output Folder"), QDir::currentPath()+"/Downloads");
-        std::thread t(&Parser::downloadFiles, p, base, path, ui->threadBox->value());
+        std::thread t(&Parser::downloadFiles, p, base, path, 100);
         t.detach();
     });
 }
-Widget::~Widget()
+
+SolutionParser::~SolutionParser()
 {
     QFile fbase(QDir::currentPath()+"/base.json"), fcustom(QDir::currentPath()+"/base_custom.json");
     fbase.open(QFile::WriteOnly);
@@ -74,21 +72,23 @@ Widget::~Widget()
     delete ui;
 }
 
-bool Widget::selectSolution(QString index)
+bool SolutionParser::selectSolution(QString key)
 {
     ui->listWidget->clear();
-    currentKey = index;
+    currentKey = key;
 
-    if(!solutions.contains(index))
+    if(!solutions.contains(key))
         return false;
 
-    for(auto e : solutions.value(index))
+    for(auto e : solutions.value(key))
     {
         QListWidgetItem *i = new QListWidgetItem();
-        if(e->isCustom())
+        if(e->isCustom)
             i->setBackground(QColor(255,200,0,50));
-        else
+        else if (e->isCorrect)
             i->setBackground(QColor(0,255,0,50));
+        else
+            i->setBackground(QColor(255,0,0,50));
 
         i->setText(e->name);
         ui->listWidget->addItem(i);
@@ -96,11 +96,12 @@ bool Widget::selectSolution(QString index)
     return true;
 }
 
-void Widget::find()
+void SolutionParser::find()
 {    
     QString key = ui->solutionLine->text();
     if(key == currentKey)
         return;
+
     if(!base.contains(key))
     {
         QMessageBox msgBox;
@@ -113,60 +114,55 @@ void Widget::find()
         return;
 
     QJsonArray sols = base.value(key).toArray();
-    int i = 0;
     for(auto e: sols) {
+
+        solutions[key].append(new Solution(false, "Loading..."));
+        Solution* so = solutions[key].last();
+        solutions[key].last()->ref = e.toString();
 
         QListWidgetItem *item = new QListWidgetItem();
         item->setBackground(QColor(255,0,0,50));
-        item->setText("Loading...");
+        item->setText(so->name);
         ui->listWidget->addItem(item);
-        solutions[key].append(new Solution());
-
-
-        QString ref = e.toString();
 
         QNetworkAccessManager *manager = new QNetworkAccessManager();
-        QNetworkRequest request(QUrl(ref.toUtf8()));
+        QNetworkRequest request(QUrl(so->ref.toUtf8()));
         manager->get(request);
 
         QObject::connect(manager, &QNetworkAccessManager::finished, manager, [=](QNetworkReply *reply) {
+
             if(reply->error() == QNetworkReply::NoError) {
-                Solution *so = solutions[key].at(i);
-                so->name = ref.mid(ref.lastIndexOf("/")+1);
-                so->path = tmp_files_path+"/"+so->name;
-                so->ref = ref;
-                so->type = ref.mid(ref.lastIndexOf('.')+1);
+                so->name = so->ref.mid(so->ref.lastIndexOf("/")+1);
+                so->isCorrect = true;
 
                 QByteArray data = reply->readAll();
                 QDir().mkdir(tmp_files_path);
-                QFile f(so->path);
+                QFile f(so->path());
                 f.open(QFile::WriteOnly);
                 f.write(data);
                 f.close();
-
-                if(currentKey == key) {
-                    item->setText(so->name);
-                    item->setBackground(QColor(0, 255, 0, 50));
-                }
             }
-            else
+            else if(currentKey == key)
                 item->setText("Error");
+
+            if(currentKey == key)
+                selectSolution(key);
+
             manager->deleteLater();
         });
-        i++;
     }
 
     for (int i = 0; i < customBase.value(key).toArray().size() ; i++) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setBackground(QColor(255,200,0,50));
-        solutions[key].append(new Solution());
+        solutions[key].append(new CustomSolution);
         item->setText(solutions[key].last()->name);
 
         ui->listWidget->addItem(item);        
     }
 }
 
-void Widget::addCustomSolution()
+void SolutionParser::addCustomSolution()
 {
     SaveSolution *s = new SaveSolution(currentKey);
     s->exec();
@@ -174,12 +170,12 @@ void Widget::addCustomSolution()
         return;
     Parser::appendJsonArray(customBase, s->Key(), QJsonArray() << ui->textBox->toPlainText());
 
-    solutions[s->Key()].append(new Solution());
+    solutions[s->Key()].append(new CustomSolution());
     if(currentKey == s->Key())
         selectSolution(s->Key());
 }
 
-void Widget::downloadBase()
+void SolutionParser::downloadBase()
 {
     if(downloading)
         return;
@@ -196,29 +192,36 @@ void Widget::downloadBase()
     t.detach();
 }
 
-void Widget::showSolution(int index)
+void SolutionParser::showCurrentSolutionAt(int index)
 {
     if(index == -1)
         return;
-    Solution* sol = solutions[currentKey].at(index);
-    ui->urlBox->setText(sol->ref);
-    ui->pathBox->setText(sol->path);
-    ui->urlBox->setCursorPosition(0);
-    ui->pathBox->setCursorPosition(0);
 
-    if(sol->isCustom())
+
+    Solution* sol = solutions[currentKey].at(index);
+    cmd << sol->path();
+    ui->urlBox->setText(sol->ref);
+
+    if(!sol->isCorrect)
+        return;
+
+    ui->urlBox->setText(sol->ref);
+    ui->urlBox->setCursorPosition(0);
+
+    if(sol->isCustom)
     {
         QJsonArray arr = customBase[currentKey].toArray();
         ui->textBox->setText(arr[index - ui->listWidget->count() + arr.size()].toString());
     }
-    else if(codeLangs.contains(sol->type, Qt::CaseInsensitive))
+    else if(codeLangs.contains(sol->lang(), Qt::CaseInsensitive))
     {
-        QFile f(sol->path);
-        f.open(QFile::ReadOnly);
-        ui->textBox->setText(f.readAll());
+        QFile f(sol->path());
+        if(f.open(QFile::ReadOnly))
+            ui->textBox->setText(f.readAll());
+        else
+            QMessageBox::warning(this, "", "Unable to open file: "+sol->path());
     }
-    else if (QMessageBox::question(this, "", "Open "+sol->name+" in another program?",
-                                   QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes)
-        QDesktopServices::openUrl(QUrl(sol->path));
+    else
+        QDesktopServices::openUrl(QUrl(sol->path()));
 
 }

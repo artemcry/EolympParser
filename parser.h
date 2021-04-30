@@ -46,16 +46,16 @@ signals:
 class Parser : public QObject
 {
     Q_OBJECT
-    QString adjustFileName(QString name);
     const int volumeCount_SiteAda = 103, volumeCount_GitHub = 9;
     int parseProgress = 0;    
 public:
+    static QString adjustFileName(QString name);
     static void appendJsonArray(QJsonObject &toIt, const QString &key, const QJsonArray &arr);
     explicit Parser(QObject *parent = nullptr);
     QJsonObject parseLinks_SiteAda();
     QJsonObject  parseLinks_GitHub();
     QJsonObject parseAllLinks();
-    void downloadFiles(const QJsonObject &base, const QString &folder, const int thread_count);
+    void downloadFiles(const QJsonObject &base, const QString &folder, const int thread_count = 100);
 
 signals:
     void parseFinished(const QString&);

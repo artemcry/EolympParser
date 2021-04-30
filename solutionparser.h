@@ -14,27 +14,38 @@
 #include <QComboBox>
 #include "parser.h"
 #include "savesolution.h"
+#define tmp_files_path QDir::currentPath()+"/tmp"
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class Widget; }
+namespace Ui { class SolutionParser; }
 QT_END_NAMESPACE
 struct Solution;
 
-class Widget : public QWidget
+class SolutionParser : public QWidget
 {
     Q_OBJECT
 public:
-    struct Solution
+    class Solution
     {
-        QString name, path, ref, type;
-        Solution(const QString &name, const QString &path, const QString &ref, const QString &type)
-            :name(name), path(path), ref(ref), type(type) {};
-        Solution() :name("custom solution") {};
-        bool isCustom() { return name == "custom solution"; }
+    public:
+        bool isCorrect;
+        bool isCustom = false;
+        QString name, ref;
+
+        Solution(bool correct = false, const QString &name = "", const QString &ref = "")
+            : isCorrect(correct), name(name), ref(ref) { }
+
+        QString path() { return  tmp_files_path+"/"+Parser::adjustFileName(name); }
+        QString lang() { return ref.mid(ref.lastIndexOf('.')+1);; }
 
     };
-    Widget(QWidget *parent = nullptr);
-    ~Widget();
+    struct CustomSolution: public Solution
+    {
+        CustomSolution(): Solution(true, "custom solution") { isCustom =  true; };
+    };
+
+    SolutionParser(QWidget *parent = nullptr);
+    ~SolutionParser();
     const QStringList codeLangs = { "cpp", "c", "cs", "py", "rb", "pas", "java", "js", "txt"} ;
     QMap<QString,QList<Solution*>> solutions;
     QJsonObject base;
@@ -45,9 +56,8 @@ public:
     void find();
     void addCustomSolution();
     void downloadBase();
-    void showSolution(int index);
+    void showCurrentSolutionAt(int index);
     bool selectSolution(QString index);
-    QString cppToPython(QString code);
-    Ui::Widget *ui;
+    Ui::SolutionParser *ui;
 };
 #endif
